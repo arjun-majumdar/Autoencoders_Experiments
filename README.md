@@ -1,4 +1,3 @@
-# Autoencoders_Experiments
-Experiments for autoencoders
+# Autoencoders Experiments
 
-In this repo, different Python 3 codes are presented using TensorFlow 2.0 demonstrating applications and implications of autoencoders
+Using autoencoders for data compression, data denoising, etc. using Python3.X and TensorFlow 2.5
