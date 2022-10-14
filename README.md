@@ -1,3 +1,7 @@
 # Autoencoders_Experiments
 
-Codes involving Autoencoders, generative probabilistic modelling in TensorFlow2 and PyTorch
+Codes involving generative probabilistic modelling with deep learning in TensorFlow2 and PyTorch
+
+- Autoencoder
+- Convolutional Auonecoder
+- GAN
