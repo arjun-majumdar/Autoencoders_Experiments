@@ -5,3 +5,8 @@ Codes involving generative probabilistic modelling with deep learning in TensorF
 - Autoencoder
 - Convolutional Auonecoder
 - GAN
+
+on different datasets:
+- MNIST
+- CIFAR-10
+- CelebA
