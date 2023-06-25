@@ -69,30 +69,6 @@ test_dataset = torchvision.datasets.MNIST(
     transform = transforms_apply
 )
 
-# len(train_dataset.targets), len(train_dataset.data)
-# (60000, 60000)
-
-# len(test_dataset.targets), len(test_dataset.data)
-# (10000, 10000)
-
-# print(f"training dataset length/shape: {list(train_dataset.data.size())}")
-# training dataset length/shape: [60000, 28, 28]
-
-# print(f"mean = {train_dataset.data.float().mean() / 255:.4f}")
-# print(f"std dev = {train_dataset.data.float().std() / 255:.4f}")
-# mean = 0.1307
-# std dev = 0.3081
-
-# Note: Since MNIST has only one channel, therefore, the
-# mean and standard deviation is computed for one channel!
-
-# Sanity check-
-# train_dataset.data.min(), train_dataset.data.max()
-# (tensor(0, dtype=torch.uint8), tensor(255, dtype=torch.uint8))
-
-# test_dataset.data.min(), test_dataset.data.max()
-# (tensor(0, dtype=torch.uint8), tensor(255, dtype=torch.uint8))
-
 # Create training and testing dataloaders-
 train_loader = torch.utils.data.DataLoader(
     dataset = train_dataset, batch_size = batch_size,
@@ -142,39 +118,13 @@ class Encoder(nn.Module):
     
     def forward(self, x, y):
         label = np.zeros((x.size(0), 10))
-
-        # label.shape
-        # (512, 10)
-
         label[np.arange(x.shape[0]), y] = 1
         label = torch.from_numpy(label)
 
-        # label.size()
-        # torch.Size([512, 10])
-
-        # torch.argmax(label, dim = 1).reshape((label.shape[0], 1, 1, 1)).size()
-        # torch.Size([512, 1, 1, 1])
-
         y_t = torch.argmax(label, dim = 1).reshape((label.shape[0], 1, 1, 1))
-
-        # torch.ones(x.shape).size(), y_t.size()
-        # (torch.Size([512, 1, 28, 28]), torch.Size([512, 1, 1, 1]))
-
         y_t = (torch.ones(x.shape) * y_t)
-
-        # y_t.size()
-        # torch.Size([512, 1, 28, 28])
-
         x_t = torch.cat((x, y_t), dim = 1)
 
-        # x_t.size(), x.size(), y_t.size(), y.size()
-        '''
-        (torch.Size([512, 2, 28, 28]),
-         torch.Size([512, 1, 28, 28]),
-         torch.Size([512, 1, 28, 28]),
-         torch.Size([512]))
-        '''
-        
         out = F.leaky_relu(self.conv1(x_t))
         out = F.leaky_relu(self.conv2(out))
         return F.leaky_relu(self.linear(out.view(out.size(0), -1)))
@@ -197,20 +147,11 @@ class Decoder(nn.Module):
     def forward(self, z, y):
         label = np.zeros((y.size(0), 10))
 
-        # label.shape
-        # (512, 10)
-
         label[np.arange(y.shape[0]), y] = 1
         label = torch.from_numpy(label)
-
-        # label.size()
-        # torch.Size([512, 10])
         
         z = torch.cat((z, label.float()), dim = 1)
 
-        # z.size()
-        # torch.Size([512, 15])
-        
         out = F.leaky_relu(self.linear(z))
         out = F.leaky_relu(self.linear2(out))
 
@@ -333,22 +274,9 @@ def compute_loss(data, data_recon, mu, log_var, alpha = 1, beta = 1):
     return final_loss, recon_loss, kl_div
 
 '''
-loss_train, recon_loss_train, kl_div_train = total_loss(
-    data = x, data_recon = x_synth,
-    mu = mu, log_var = logvar
-)
-
-# loss_train.item(), recon_loss_train.item(), kl_div_train.item()
-# (961.7681274414062, 961.6026000976562, 0.16555728018283844)
-'''
-
-'''
 # Alternative cost computation-
 recon_loss = F.mse_loss(x_synth, x, reduction = 'sum')
 kl_div = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-
-# kl_div.item(), recon_loss.item()
-# (84.76532745361328, 492340.5)
 '''
 
 
@@ -454,20 +382,6 @@ def test_one_epoch(model, dataloader, dataset, alpha, beta):
     test_recon_loss = running_recon_loss / len(dataloader.dataset)
     
     return test_loss, test_kl_loss, test_recon_loss
-
-'''
-loss_train, kl_loss_train, recon_loss_train = train_one_epoch(
-    model = model, dataloader = train_loader,
-    dataset = train_dataset, alpha = 1,
-    beta = 1
-)
-
-test_loss, test_kl_loss, test_recon_loss = test_one_epoch(
-    model = model, dataloader = test_loader,
-    dataset = test_dataset, alpha = 1,
-    beta = 1
-)
-'''
 
 
 # Specify alpha - Hyperparameter to control the importance of reconstruction
@@ -582,19 +496,16 @@ def synthesize_images(model, label = 2, batch_size = 128, latent_dim = 5):
     
     return np.transpose(a = x_synth, axes = (0, 2, 3, 1))
 
-
+# Specify class/label to generate digits-
 label = 7
 
+# Get synthesized digits-
 x_synth = synthesize_images(
     model = model, label = label,
     batch_size = batch_size, latent_dim = latent_dim
 )
 
-x_synth.shape
-# (512, 28, 28, 1)
-
-
-# Visualize synthesized images using trained VAE-
+# Visualize synthesized images using trained Conditional Conv-VAE-
 plt.figure(figsize = (12, 10))
 for i in range(50):
     # 10 rows & 5 columns-
